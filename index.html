@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaycer Khouini — Architecture Logicielle & IoT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0a0e12;
+  --bg-panel:#0f151b;
+  --bg-panel-2:#141c24;
+  --copper:#c9814f;
+  --copper-bright:#e8a366;
+  --teal:#5ee6c8;
+  --text:#e9e6df;
+  --text-dim:#8b93a1;
+  --line:rgba(201,129,79,0.22);
+  --line-bright:rgba(201,129,79,0.55);
+  --radius:2px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* faint global grid, like PCB substrate */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(201,129,79,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,129,79,0.045) 1px, transparent 1px);
+  background-size:42px 42px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.mono{font-family:'JetBrains Mono',monospace;}
+
+::selection{background:var(--copper);color:var(--bg);}
+
+/* ---------- NAV ---------- */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 6vw;
+  background:rgba(10,14,18,0.75);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.logo{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;font-size:1.05rem;letter-spacing:0.02em;
+  color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.logo .dot{width:7px;height:7px;background:var(--teal);border-radius:50%;box-shadow:0 0 8px var(--teal);animation:pulse 2.4s ease-in-out infinite;}
+.navlinks{display:flex;gap:34px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.04em;}
+.navlinks a{color:var(--text-dim);text-decoration:none;position:relative;padding-bottom:4px;transition:color .25s;}
+.navlinks a::after{content:'';position:absolute;left:0;bottom:0;width:0;height:1px;background:var(--copper-bright);transition:width .25s;}
+.navlinks a:hover{color:var(--text);}
+.navlinks a:hover::after{width:100%;}
+.navlinks span{color:var(--copper);}
+@media (max-width:760px){.navlinks{display:none;}}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:120px 6vw 60px;
+  z-index:1;
+}
+#circuit-svg{
+  position:absolute;inset:0;width:100%;height:100%;
+  z-index:-1;opacity:0.9;
+}
+.eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.78rem;color:var(--teal);letter-spacing:0.12em;
+  display:flex;align-items:center;gap:10px;margin-bottom:22px;
+  opacity:0;transform:translateY(10px);
+  animation:fadeUp .8s ease forwards .1s;
+}
+.eyebrow::before{content:'';width:24px;height:1px;background:var(--teal);}
+h1.name{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:800;
+  font-size:clamp(2.6rem,7vw,5.2rem);
+  line-height:1.02;
+  letter-spacing:-0.01em;
+  color:var(--text);
+  opacity:0;transform:translateY(14px);
+  animation:fadeUp .9s ease forwards .25s;
+}
+h1.name span{color:transparent;-webkit-text-stroke:1.5px var(--copper);}
+.role{
+  font-size:clamp(1.05rem,2.2vw,1.5rem);
+  color:var(--text-dim);
+  margin-top:18px;
+  max-width:640px;
+  font-weight:500;
+  opacity:0;transform:translateY(14px);
+  animation:fadeUp .9s ease forwards .45s;
+}
+.role b{color:var(--copper-bright);font-weight:600;}
+.location{
+  margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--text-dim);
+  display:flex;align-items:center;gap:8px;
+  opacity:0;animation:fadeUp .9s ease forwards .55s;
+}
+.location .pin{color:var(--teal);}
+
+.cta-row{
+  margin-top:42px;display:flex;flex-wrap:wrap;gap:16px;
+  opacity:0;transform:translateY(14px);
+  animation:fadeUp .9s ease forwards .65s;
+}
+.btn{
+  font-family:'JetBrains Mono',monospace;font-size:0.82rem;letter-spacing:0.03em;
+  padding:13px 24px;border-radius:var(--radius);text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:all .25s;border:1px solid var(--line-bright);
+}
+.btn-primary{background:var(--copper);color:#100b06;font-weight:700;border-color:var(--copper);}
+.btn-primary:hover{background:var(--copper-bright);box-shadow:0 0 22px rgba(201,129,79,0.4);transform:translateY(-2px);}
+.btn-ghost{color:var(--text);background:transparent;}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);box-shadow:0 0 16px rgba(94,230,200,0.15);transform:translateY(-2px);}
+
+.scroll-hint{
+  position:absolute;bottom:34px;left:6vw;
+  font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-dim);
+  display:flex;align-items:center;gap:10px;
+  opacity:0;animation:fadeUp .9s ease forwards 1s;
+}
+.scroll-hint .bar{width:1px;height:26px;background:linear-gradient(var(--copper),transparent);animation:slide 1.8s ease-in-out infinite;}
+
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+@keyframes slide{0%{transform:translateY(-6px);opacity:0;}50%{opacity:1;}100%{transform:translateY(10px);opacity:0;}}
+
+/* ---------- SECTION SHELL ---------- */
+section{position:relative;z-index:1;padding:110px 6vw;}
+.section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:56px;}
+.section-num{font-family:'JetBrains Mono',monospace;color:var(--copper);font-size:0.82rem;}
+.section-title{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(1.5rem,3vw,2.1rem);}
+.section-line{flex:1;height:1px;background:var(--line);}
+.section-sub{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-dim);margin-top:-40px;margin-bottom:50px;max-width:600px;}
+
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ---------- ABOUT ---------- */
+.about-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:60px;align-items:start;}
+.about-text p{color:var(--text-dim);line-height:1.85;font-size:1.02rem;margin-bottom:20px;}
+.about-text b{color:var(--text);font-weight:600;}
+.stat-panel{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px;
+}
+.stat-row{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;}
+.stat-row:last-child{border-bottom:none;}
+.stat-row .k{color:var(--text-dim);font-size:0.78rem;}
+.stat-row .v{color:var(--teal);font-size:0.88rem;font-weight:700;}
+@media (max-width:820px){.about-grid{grid-template-columns:1fr;}}
+
+/* ---------- SKILLS ---------- */
+.skill-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
+.skill-col{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:border-color .3s, transform .3s;}
+.skill-col:hover{border-color:var(--line-bright);transform:translateY(-4px);}
+.skill-col h4{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--copper-bright);letter-spacing:0.05em;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.skill-col h4::before{content:'';width:8px;height:8px;border:1px solid var(--copper-bright);border-radius:1px;transform:rotate(45deg);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-dim);border:1px solid var(--line);padding:6px 10px;border-radius:var(--radius);transition:all .2s;}
+.chip:hover{color:var(--teal);border-color:var(--teal);}
+@media (max-width:820px){.skill-cols{grid-template-columns:1fr;}}
+
+/* ---------- PROJECTS ---------- */
+.projects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;}
+.pcard{
+  position:relative;background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:30px;overflow:hidden;transition:transform .35s, border-color .35s, box-shadow .35s;
+}
+.pcard:hover{transform:translateY(-6px);border-color:var(--line-bright);box-shadow:0 18px 40px -20px rgba(201,129,79,0.35);}
+.pcard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--copper),transparent);
+  transform:scaleX(0);transform-origin:left;transition:transform .5s ease;
+}
+.pcard:hover::before{transform:scaleX(1);}
+.pcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.pcard-ref{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-dim);}
+.pcard-status{font-family:'JetBrains Mono',monospace;font-size:0.68rem;padding:3px 9px;border-radius:12px;border:1px solid var(--teal);color:var(--teal);}
+.pcard h3{font-size:1.28rem;font-weight:700;margin-bottom:8px;}
+.pcard .tagline{font-family:'JetBrains Mono',monospace;font-size:0.74rem;color:var(--copper-bright);margin-bottom:14px;}
+.pcard p.desc{color:var(--text-dim);font-size:0.92rem;line-height:1.65;margin-bottom:18px;}
+.stacktags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;}
+.stacktags span{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-dim);background:rgba(255,255,255,0.03);padding:4px 9px;border-radius:var(--radius);}
+.pcard-links{display:flex;gap:14px;}
+.plink{font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line-bright);padding-bottom:2px;transition:color .2s,border-color .2s;}
+.plink:hover{color:var(--teal);border-color:var(--teal);}
+.plink.disabled{color:var(--text-dim);border-color:transparent;cursor:default;}
+@media (max-width:820px){.projects-grid{grid-template-columns:1fr;}}
+
+/* ---------- EXPERIENCE ---------- */
+.timeline{position:relative;padding-left:38px;}
+.timeline::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:var(--line);}
+.tl-item{position:relative;padding-bottom:44px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item::before{content:'';position:absolute;left:-38px;top:4px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--copper);}
+.tl-role{font-weight:700;font-size:1.08rem;}
+.tl-org{font-family:'JetBrains Mono',monospace;color:var(--copper-bright);font-size:0.8rem;margin:4px 0 10px;}
+.tl-desc{color:var(--text-dim);font-size:0.92rem;line-height:1.7;max-width:640px;}
+
+/* ---------- EDUCATION ---------- */
+.edu-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
+.edu-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px;}
+.edu-card h4{font-size:1.1rem;margin-bottom:6px;}
+.edu-card .sub{font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--teal);margin-bottom:12px;}
+.edu-card p{color:var(--text-dim);font-size:0.88rem;line-height:1.6;}
+@media (max-width:820px){.edu-grid{grid-template-columns:1fr;}}
+
+/* ---------- CONTACT ---------- */
+.contact-panel{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:60px 6vw;text-align:center;position:relative;overflow:hidden;
+}
+.contact-panel h2{font-family:'JetBrains Mono',monospace;font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;margin-bottom:16px;}
+.contact-panel p{color:var(--text-dim);max-width:540px;margin:0 auto 34px;line-height:1.7;}
+.contact-links{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;}
+
+footer{text-align:center;padding:40px 6vw;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-dim);}
+footer span{color:var(--copper);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span>KK<span style="color:var(--text-dim)">.dev</span></div>
+  <div class="navlinks">
+    <a href="#skills">01 <span>·</span> Compétences</a>
+    <a href="#projects">02 <span>·</span> Projets</a>
+    <a href="#experience">03 <span>·</span> Expérience</a>
+    <a href="#contact">04 <span>·</span> Contact</a>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <svg id="circuit-svg" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice"></svg>
+
+  <div class="eyebrow mono">SOFTWARE ARCHITECT × IOT ENGINEER</div>
+  <h1 class="name">Kaycer <span>Khouini</span></h1>
+  <p class="role">Je conçois des systèmes de bout en bout — du capteur <b>STM32</b> à l'architecture logicielle qui l'exploite, en passant par les applications que les clients utilisent chaque jour.</p>
+  <div class="location mono"><span class="pin">◎</span> Grombalia, Tunisie — ouvert aux opportunités</div>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#projects">Voir mes projets →</a>
+    <a class="btn btn-ghost" href="https://github.com/Caeser9" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="btn btn-ghost" href="https://www.linkedin.com/in/kaycerkhouini" target="_blank" rel="noopener">LinkedIn ↗</a>
+    <a class="btn btn-ghost" href="mailto:kaycerkhouini99@gmail.com">Me contacter</a>
+  </div>
+
+  <div class="scroll-hint"><div class="bar"></div>SCROLL</div>
+</header>
+
+<!-- ================= ABOUT ================= -->
+<section id="about">
+  <div class="section-head reveal">
+    <span class="section-num mono">00</span>
+    <span class="section-title">Profil</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <p>Je suis <b>ingénieur en architecture logicielle et systèmes embarqués / IoT</b>, formé à l'<b>ESPRIT</b> et à l'<b>ISI Mahdia</b>. Ce double parcours me permet de penser un produit dans son ensemble : du firmware qui tourne sur un microcontrôleur jusqu'à l'architecture qui structure une application métier complète.</p>
+      <p>Je ne me contente pas d'écrire du code — je <b>possède mes projets de bout en bout</b> : conception, développement, déploiement, et maintenance en conditions réelles chez des clients. <b>Factoria</b>, mon application de gestion de point de vente, en est l'exemple le plus abouti : conçue, packagée et livrée en autonomie complète.</p>
+    </div>
+    <div class="stat-panel reveal">
+      <div class="stat-row"><span class="k">DÉFAUTS LIVRÉS — HAYKO</span><span class="v">0%</span></div>
+      <div class="stat-row"><span class="k">UPTIME — ATOMIC IT</span><span class="v">99%</span></div>
+      <div class="stat-row"><span class="k">FORMATIONS</span><span class="v">2 diplômes ingénieur</span></div>
+      <div class="stat-row"><span class="k">DOMAINES</span><span class="v">Software · Embedded · DevOps</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SKILLS ================= -->
+<section id="skills">
+  <div class="section-head reveal">
+    <span class="section-num mono">01</span>
+    <span class="section-title">Compétences</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="skill-cols">
+    <div class="skill-col reveal">
+      <h4>EMBARQUÉ / IOT</h4>
+      <div class="chips">
+        <span class="chip">C / C++</span><span class="chip">ESP32</span><span class="chip">STM32</span>
+        <span class="chip">Arduino</span><span class="chip">FreeRTOS</span><span class="chip">MQTT</span>
+        <span class="chip">UART · SPI · I2C</span>
+      </div>
+    </div>
+    <div class="skill-col reveal">
+      <h4>SOFTWARE / FULL-STACK</h4>
+      <div class="chips">
+        <span class="chip">TypeScript</span><span class="chip">React</span><span class="chip">Next.js</span>
+        <span class="chip">Angular</span><span class="chip">Electron</span><span class="chip">Spring Boot</span>
+        <span class="chip">Node.js</span><span class="chip">MongoDB</span>
+      </div>
+    </div>
+    <div class="skill-col reveal">
+      <h4>INFRA / DEVOPS</h4>
+      <div class="chips">
+        <span class="chip">Docker</span><span class="chip">Nginx</span><span class="chip">PM2</span>
+        <span class="chip">GitHub Actions</span><span class="chip">CI/CD</span><span class="chip">VPS Linux</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROJECTS ================= -->
+<section id="projects">
+  <div class="section-head reveal">
+    <span class="section-num mono">02</span>
+    <span class="section-title">Projets</span>
+    <div class="section-line"></div>
+  </div>
+  <p class="section-sub reveal">Une sélection de systèmes que j'ai conçus et livrés, du hardware au déploiement.</p>
+
+  <div class="projects-grid">
+
+    <div class="pcard reveal">
+      <div class="pcard-top"><span class="pcard-ref mono">PRJ-01</span><span class="pcard-status">DÉPLOYÉ · CLIENT</span></div>
+      <h3>Factoria</h3>
+      <div class="tagline mono">Application desktop de gestion de magasin, hors-ligne</div>
+      <p class="desc">Anciennement Gestionnaire-Quincaillerie. Application commerciale complète avec base MongoDB embarquée (aucune installation requise côté client), installeur Windows NSIS, et système de licence RSA avec vérification hors-ligne. Déployée en environnement réel.</p>
+      <div class="stacktags"><span>Electron</span><span>React</span><span>TypeScript</span><span>MongoDB</span></div>
+      <div class="pcard-links"><span class="plink disabled">Projet commercial — code privé</span></div>
+    </div>
+
+    <div class="pcard reveal">
+      <div class="pcard-top"><span class="pcard-ref mono">PRJ-02</span><span class="pcard-status">EN LIGNE</span></div>
+      <h3>produitsurmesure.fr</h3>
+      <div class="tagline mono">Plateforme e-commerce sur-mesure</div>
+      <p class="desc">Site e-commerce full-stack déployé sur VPS avec reverse proxy Nginx, SSL automatisé et pipeline de déploiement. Optimisé SEO (sitemap, métadonnées, OpenGraph) et gestion CORS pour une architecture front/back découplée.</p>
+      <div class="stacktags"><span>Next.js</span><span>Spring Boot</span><span>MongoDB</span><span>Nginx</span></div>
+      <div class="pcard-links">
+        <a class="plink" href="https://produitsurmesure.fr" target="_blank" rel="noopener">Voir le site ↗</a>
+      </div>
+    </div>
+
+    <div class="pcard reveal">
+      <div class="pcard-top"><span class="pcard-ref mono">PRJ-03</span><span class="pcard-status">PROTOTYPE</span></div>
+      <h3>KlimaLink</h3>
+      <div class="tagline mono">SaaS de monitoring énergétique triphasé pour PME</div>
+      <p class="desc">Plateforme IoT ciblant les usines et hôtels tunisiens : capteurs de courant et de tension sur STM32, transmission 4G, et modèle hardware + abonnement SaaS. Prototype et schéma de câblage complets, validés par une analyse de viabilité.</p>
+      <div class="stacktags"><span>STM32</span><span>SCT013 / ZMPT101B</span><span>SIM7600</span><span>SaaS</span></div>
+      <div class="pcard-links"><span class="plink disabled">Concept R&D — hardware propriétaire</span></div>
+    </div>
+
+    <div class="pcard reveal">
+      <div class="pcard-top"><span class="pcard-ref mono">PRJ-04</span><span class="pcard-status">EN LIGNE</span></div>
+      <h3>Serveur de licences RSA</h3>
+      <div class="tagline mono">Gestion centralisée de licences pour apps Electron</div>
+      <p class="desc">Serveur de licences avec activation en ligne, vérification par signature RSA locale et période de grâce hors-ligne de 10 jours. Utilisé en production pour sécuriser la distribution de Factoria.</p>
+      <div class="stacktags"><span>Node.js</span><span>RSA</span><span>JWT</span></div>
+      <div class="pcard-links">
+        <a class="plink" href="https://licenceskayapps.duckdns.org" target="_blank" rel="noopener">Voir le service ↗</a>
+      </div>
+    </div>
+
+    <div class="pcard reveal">
+      <div class="pcard-top"><span class="pcard-ref mono">PRJ-05</span><span class="pcard-status">TERMINÉ</span></div>
+      <h3>Système de pesage industriel</h3>
+      <div class="tagline mono">Automatisation par seuil de poids, interfacée à un automate</div>
+      <p class="desc">Système Arduino avec cellules de charge HX711, écran LCD I2C, et machine à états (IDLE → RUNNING → SEUIL1 → TERMINE), relié à un automate Panasonic FP0-A21 via sortie analogique DAC.</p>
+      <div class="stacktags"><span>Arduino</span><span>HX711</span><span>PLC</span></div>
+      <div class="pcard-links"><span class="plink disabled">Projet client — code privé</span></div>
+    </div>
+
+    <div class="pcard reveal">
+      <div class="pcard-top"><span class="pcard-ref mono">PRJ-06</span><span class="pcard-status">DÉPLOYÉ · CLIENT</span></div>
+      <h3>Panneaux de climatisation IoT — HAYKO</h3>
+      <div class="tagline mono">Chef de projet — panneaux de contrôle climatique connectés</div>
+      <p class="desc">Pilotage du développement de panneaux de contrôle climatique IoT jusqu'à la livraison, avec un taux de <b>0% d'unités défectueuses</b> expédiées.</p>
+      <div class="stacktags"><span>IoT</span><span>Gestion de projet</span><span>Contrôle qualité</span></div>
+      <div class="pcard-links"><span class="plink disabled">Projet industriel — confidentiel</span></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= EXPERIENCE ================= -->
+<section id="experience">
+  <div class="section-head reveal">
+    <span class="section-num mono">03</span>
+    <span class="section-title">Expérience</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item reveal">
+      <div class="tl-role">Assistant Chef de projet</div>
+      <div class="tl-org mono">HAYKO</div>
+      <div class="tl-desc">Pilotage du développement de panneaux de contrôle climatique IoT, de la conception à la livraison client, avec un taux de 0% d'unités défectueuses expédiées.</div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-role">Stagiaire — Systèmes temps réel</div>
+      <div class="tl-org mono">ATOMIC IT</div>
+      <div class="tl-desc">Conception d'un système de microservices temps réel, atteignant 99% de disponibilité en production.</div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-role">Stagiaire - Architecture Logicielle</div>
+      <div class="tl-org mono">IPACT CONSULT</div>
+      <div class="tl-desc">Expérience en développement logiciel au sein d'un cabinet de conseil.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EDUCATION ================= -->
+<section id="education">
+  <div class="section-head reveal">
+    <span class="section-num mono">04</span>
+    <span class="section-title">Formation</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="edu-grid">
+    <div class="edu-card reveal">
+      <h4>ESPRIT</h4>
+      <div class="sub mono">Ingénierie — Architecture Logicielle</div>
+      <p>Formation d'ingénieur spécialisée en conception et architecture de systèmes logiciels.</p>
+    </div>
+    <div class="edu-card reveal">
+      <h4>ISI Mahdia</h4>
+      <div class="sub mono">Licence — Systèmes Embarqués & IoT</div>
+      <p>Formation d'ingénieur spécialisée en électronique embarquée et objets connectés.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section id="contact">
+  <div class="contact-panel reveal">
+    <h2>Construisons quelque chose ensemble.</h2>
+    <p>Actuellement à la recherche de nouvelles opportunités en architecture logicielle, systèmes embarqués/IoT, ou ingénierie full-stack.</p>
+    <div class="contact-links">
+      <a class="btn btn-primary" href="mailto:kaycerkhouini99@gmail.com">kaycerkhouini99@gmail.com</a>
+      <a class="btn btn-ghost" href="https://github.com/Caeser9" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn btn-ghost" href="https://www.linkedin.com/in/kaycerkhouini" target="_blank" rel="noopener">LinkedIn ↗</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  designed & built by <span>Kaycer Khouini</span> — Grombalia, Tunisie
+</footer>
+
+<script>
+// ---- Scroll reveal ----
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      io.unobserve(e.target);
+    }
+  });
+},{threshold:0.15});
+revealEls.forEach((el,i)=>{
+  el.style.transitionDelay = (i%6)*0.06+'s';
+  io.observe(el);
+});
+
+// ---- Hero circuit animation ----
+const svg = document.getElementById('circuit-svg');
+const NS = 'http://www.w3.org/2000/svg';
+
+function rand(min,max){return Math.random()*(max-min)+min;}
+
+// generate a set of orthogonal "trace" paths from random edge points toward a few hub nodes
+const hubs = [
+  {x:1080,y:180},{x:1220,y:400},{x:980,y:560},{x:1280,y:620}
+];
+const paths = [];
+for(let i=0;i<16;i++){
+  const startX = rand(700,1380);
+  const startY = rand(20,780);
+  const hub = hubs[Math.floor(rand(0,hubs.length))];
+  const midX = hub.x;
+  const d = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${hub.y}`;
+  paths.push({d, hub});
+}
+
+paths.forEach((p,i)=>{
+  const path = document.createElementNS(NS,'path');
+  path.setAttribute('d', p.d);
+  path.setAttribute('stroke', i % 3 === 0 ? 'var(--teal)' : 'var(--copper)');
+  path.setAttribute('stroke-width','1');
+  path.setAttribute('fill','none');
+  path.setAttribute('opacity','0.55');
+  svg.appendChild(path);
+  const len = path.getTotalLength();
+  path.style.strokeDasharray = len;
+  path.style.strokeDashoffset = len;
+  path.animate(
+    [{strokeDashoffset:len},{strokeDashoffset:0}],
+    {duration: rand(1200,2200), delay: i*70, fill:'forwards', easing:'ease-out'}
+  );
+});
+
+// glowing via nodes at hubs
+hubs.forEach((h,i)=>{
+  const c = document.createElementNS(NS,'circle');
+  c.setAttribute('cx',h.x);c.setAttribute('cy',h.y);c.setAttribute('r','4');
+  c.setAttribute('fill','var(--copper-bright)');
+  c.setAttribute('opacity','0');
+  svg.appendChild(c);
+  c.animate(
+    [{opacity:0},{opacity:1}],
+    {duration:400, delay: 1400+i*150, fill:'forwards'}
+  );
+  const pulse = document.createElementNS(NS,'circle');
+  pulse.setAttribute('cx',h.x);pulse.setAttribute('cy',h.y);pulse.setAttribute('r','4');
+  pulse.setAttribute('fill','none');
+  pulse.setAttribute('stroke','var(--copper-bright)');
+  pulse.setAttribute('stroke-width','1');
+  svg.appendChild(pulse);
+  pulse.animate(
+    [{r:4,opacity:0.8},{r:22,opacity:0}],
+    {duration:2200, delay: 1800+i*400, iterations:Infinity, easing:'ease-out'}
+  );
+});
+</script>
+
+</body>
+</html>
